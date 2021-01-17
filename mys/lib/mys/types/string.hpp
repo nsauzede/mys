@@ -14,13 +14,12 @@ class RegexMatch;
 // A string.
 class String final {
 private:
-    void strip_left_right(std::optional<const String> chars, bool left, bool right) const;
-    void lower(bool capitalize) const;
+    String strip_left_right(std::optional<const String> chars, bool left, bool right) const;
     i64 find(const String& sub, std::optional<i64> start, std::optional<i64> end,
              bool reverse) const;
 
     enum class CaseMode { LOWER, UPPER, FOLD, CAPITALIZE };
-    void set_case(CaseMode mode) const;
+    String set_case(CaseMode mode) const;
 
 public:
     std::shared_ptr<std::vector<Char>> m_string;
@@ -132,30 +131,26 @@ public:
     String get(std::optional<i64> start, std::optional<i64> end,
                i64 step) const;
 
-    String to_lower() const;
-    String to_upper() const;
-    String to_casefold() const;
-    String to_capitalize() const;
     Bool starts_with(const String& value) const;
     Bool ends_with(const String& value) const;
     std::shared_ptr<List<String>> split(const String& separator) const;
     std::shared_ptr<List<String>> split(const Regex& regex) const;
     String join(const std::shared_ptr<List<String>>& list) const;
-    void strip(std::optional<const String> chars) const;
-    void strip_left(std::optional<const String> chars) const;
-    void strip_right(std::optional<const String> chars) const;
-    void lower() const;
-    void upper() const;
-    void casefold() const;
-    void capitalize() const;
+    String strip(std::optional<const String> chars) const;
+    String strip_left(std::optional<const String> chars) const;
+    String strip_right(std::optional<const String> chars) const;
+    String lower() const;
+    String upper() const;
+    String casefold() const;
+    String capitalize() const;
     i64 find(const String& sub, std::optional<i64> start, std::optional<i64> end) const;
     i64 find(const Char& sub, std::optional<i64> start, std::optional<i64> end) const;
     i64 find_reverse(const String& sub, std::optional<i64> start, std::optional<i64> end) const;
     i64 find_reverse(const Char& sub, std::optional<i64> start, std::optional<i64> end) const;
     String cut(const Char& chr) const;
-    void replace(const Char& old, const Char& _new) const;
-    void replace(const String& old, const String& _new) const;
-    void replace(const Regex& regex, const String& replacement, int flags = 0) const;
+    String replace(const Char& old, const Char& _new) const;
+    String replace(const String& old, const String& _new) const;
+    String replace(const Regex& regex, const String& replacement, int flags = 0) const;
     Bool is_digit() const;
     Bool is_numeric() const;
     Bool is_alpha() const;

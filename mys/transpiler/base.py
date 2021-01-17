@@ -2083,6 +2083,8 @@ class BaseVisitor(ast.NodeVisitor):
             value = self.visit_value_check_type(node.value, value_mys_type)
 
             return f'shared_ptr_not_none({base})->__setitem__({key}, {value});'
+        elif self.context.mys_type == 'string':
+            raise CompileError('string item assignment not allowed', node)
         else:
             return self.visit_assign_other(node, target)
 
