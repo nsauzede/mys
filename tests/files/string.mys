@@ -5,11 +5,11 @@ def get() -> (string, string):
 def test_strings():
     foo, bar = get()
 
-    # Another reference to the same object.
+    # += creates a new string
     foo2 = foo
     foo += bar
     assert foo == "Hello!"
-    assert foo2 == foo
+    assert foo2 != foo
 
 @test
 def test_string_asserts():
@@ -335,9 +335,11 @@ def test_string_find():
 
 @test
 def test_string_cut():
-    x = "find t or t"
+    x = "find t or tea"
     assert x.cut('t') == "find "
-    assert x == " or t"
+    assert x == " or tea"
+    assert x.cut('t') == " or "
+    assert x == "ea"
 
     x = "find t or t"
     assert x.cut('q') is None
@@ -362,6 +364,13 @@ def test_string_strip():
 
     x = "www.example.com"
     assert x.strip_right("cmowz.") == "www.example"
+
+    z = x.strip_right("cmowz.")
+    assert z == "www.example"
+    z = z.strip_left("cmowz.")
+    assert z == "example"
+    z = z.strip("e")
+    assert z == "xampl"
 
     x = "foo"
     assert x.strip_right("fo") == ""

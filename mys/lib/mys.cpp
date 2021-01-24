@@ -284,6 +284,15 @@ const String& string_not_none(const String& obj)
     return obj;
 }
 
+String& string_not_none(String& obj)
+{
+    if (!obj.m_string) {
+        std::make_shared<NoneError>("object is None")->__throw();
+    }
+
+    return obj;
+}
+
 const Regex& regex_not_none(const Regex& obj)
 {
     if (!obj.m_compiled) {
@@ -321,8 +330,7 @@ std::ostream& operator<<(std::ostream& os, Object& obj)
 String::String(const char *str)
 {
     if (str) {
-        m_string = std::make_shared<std::vector<Char>>();
-
+        m_string = std::make_shared<CharVector>();
         for (size_t i = 0; i < strlen(str); i++) {
             m_string->push_back(str[i]);
         }
@@ -335,8 +343,10 @@ String String::operator+(const String& other)
 {
     String res("");
 
+    res.m_string->thaw();
     res += *this;
     res += other;
+    res.m_string->freeze();
 
     return res;
 }
@@ -346,9 +356,11 @@ String String::operator*(int value) const
     String res("");
     int i;
 
+    res.m_string->thaw();
     for (i = 0; i < value; i++) {
         res += *this;
     }
+    res.m_string->freeze();
 
     return res;
 }
@@ -377,7 +389,7 @@ Bytes String::to_utf8() const
 String String::set_case(CaseMode mode) const
 {
     String res;
-    res.m_string = std::make_shared<std::vector<Char>>(*m_string.get());
+    res.m_string = std::make_shared<CharVector>(*m_string.get());
 
     auto i = res.m_string->begin();
     int index = 0;
@@ -436,7 +448,7 @@ String String::set_case(CaseMode mode) const
             index += 1;
         }
         else {
-            std::vector<Char> vmapped;
+            CharVector vmapped;
             vmapped.resize(n);
             for (int j = 0; j < n; ++j)  {
                 vmapped[j] = mapped[j];
@@ -448,6 +460,7 @@ String String::set_case(CaseMode mode) const
             index += vmapped.size();
         }
     }
+
     return res;
 }
 
@@ -564,6 +577,7 @@ String String::get(std::optional<i64> _start, std::optional<i64> _end,
         res.m_string->push_back(m_string->at(i));
         i += step;
     }
+
     return res;
 }
 
@@ -630,6 +644,7 @@ String String::join(const std::shared_ptr<List<String>>& list) const
     String res("");
     size_t j = 0;
 
+    res.m_string->thaw();
     for (auto i : list->m_list) {
         res += i;
         if (j < list->m_list.size() - 1) {
@@ -637,6 +652,8 @@ String String::join(const std::shared_ptr<List<String>>& list) const
         }
         ++j;
     }
+    res.m_string->freeze();
+
     return res;
 }
 
@@ -742,7 +759,9 @@ std::shared_ptr<List<String>> String::split(const String& separator) const
 String String::strip_left_right(std::optional<const String> chars, bool left, bool right) const
 {
     String res;
-    res.m_string = std::make_shared<std::vector<Char>>(*m_string.get());
+    res.m_string = std::make_shared<CharVector>(*m_string.get());
+    res.m_string->m_begin = m_string->m_begin;
+    res.m_string->m_end = m_string->m_end;
 
     bool whitespace = !chars.has_value();
 
@@ -761,7 +780,7 @@ String String::strip_left_right(std::optional<const String> chars, bool left, bo
                 }
             }
         }
-        res.m_string->erase(res.m_string->begin(), begin);
+        res.m_string->m_begin += begin - res.m_string->begin();
     }
 
     if (right) {
@@ -779,7 +798,7 @@ String String::strip_left_right(std::optional<const String> chars, bool left, bo
                 }
             }
         }
-        res.m_string->erase(end.base(), res.m_string->end());
+        res.m_string->m_end += end - res.m_string->rbegin();
     }
     return res;
 }
@@ -810,15 +829,14 @@ String String::cut(const Char& chr) const
     res.m_string->resize(i - m_string->begin());
     std::copy(m_string->begin(), i, res.m_string->begin());
 
-    m_string->erase(m_string->begin(), i + 1);
-
+    m_string->m_begin += 1 + i - m_string->begin();
     return res;
 }
 
 String String::replace(const Char& old, const Char& _new) const
 {
     String res;
-    res.m_string = std::make_shared<std::vector<Char>>(*m_string.get());
+    res.m_string = std::make_shared<CharVector>(*m_string.get());
 
     for (auto& ch : *res.m_string) {
         if (ch.m_value == old.m_value) {
@@ -832,7 +850,7 @@ String String::replace(const Char& old, const Char& _new) const
 String String::replace(const String& old, const String& _new) const
 {
     String res;
-    res.m_string = std::make_shared<std::vector<Char>>(*m_string.get());
+    res.m_string = std::make_shared<CharVector>(*m_string.get());
 
     auto i = res.m_string->begin();
     while (i != res.m_string->end()) {

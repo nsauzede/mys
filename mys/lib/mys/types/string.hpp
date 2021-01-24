@@ -11,6 +11,127 @@ template <typename T> class List;
 class Regex;
 class RegexMatch;
 
+class VectorView : public std::vector<Char>
+{
+public:
+    int m_begin;
+    int m_end;
+    bool m_frozen;
+
+    VectorView()
+        : std::vector<Char>(),
+          m_begin(0),
+          m_end(0),
+          m_frozen(true)
+    {
+    }
+
+    VectorView(const VectorView& view)
+        : std::vector<Char>(view),
+          m_begin(0),
+          m_end(0),
+          m_frozen(true)
+    {
+    }
+
+    VectorView(std::initializer_list<Char> init)
+        : std::vector<Char>(init),
+          m_begin(0),
+          m_end(0),
+          m_frozen(true)
+    {
+    }
+
+    bool operator==(const VectorView& other) const
+    {
+        if (other.size() != size())
+            return false;
+        for (int i = 0; i < size(); ++i) {
+            if (at(i) != other.at(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    void cut()
+    {
+        if (m_frozen) {
+            erase(end(), std::vector<Char>::end());
+            erase(std::vector<Char>::begin(), begin());
+            m_begin = 0;
+            m_end = 0;
+        }
+    }
+
+    void thaw()
+    {
+        cut();
+        m_frozen = false;
+    }
+
+    void freeze()
+    {
+        m_frozen = true;
+    }
+
+    Char& operator[](size_type index)
+    {
+        return at(index);
+    }
+
+    Char& at(size_type index)
+    {
+        if (m_frozen) {
+            return std::vector<Char>::at(index + m_begin);
+        }
+        else {
+            return std::vector<Char>::at(index);
+        }
+    }
+
+    const Char& at(size_type index) const
+    {
+        if (m_frozen) {
+            return std::vector<Char>::at(index + m_begin);
+        }
+        else {
+            return std::vector<Char>::at(index);
+        }
+    }
+
+    iterator begin()
+    {
+        return std::vector<Char>::begin() + (m_frozen ? m_begin : 0);
+    }
+
+    iterator end()
+    {
+        return std::vector<Char>::end() - (m_frozen ? m_end : 0);
+    }
+
+    reverse_iterator rbegin()
+    {
+        return std::make_reverse_iterator(end());
+    }
+
+    reverse_iterator rend()
+    {
+        return std::make_reverse_iterator(begin());
+    }
+
+    size_t size() const
+    {
+        if (m_frozen) {
+            return std::vector<Char>::size() - m_end - m_begin;
+        }
+        else {
+            return std::vector<Char>::size();
+        }
+    }
+};
+
+
 // A string.
 class String final {
 private:
@@ -22,7 +143,8 @@ private:
     String set_case(CaseMode mode) const;
 
 public:
-    std::shared_ptr<std::vector<Char>> m_string;
+    typedef VectorView CharVector;
+    std::shared_ptr<CharVector> m_string;
 
     String() : m_string(nullptr)
     {
@@ -35,7 +157,7 @@ public:
     }
 
     String(std::initializer_list<Char> il) :
-        m_string(std::make_shared<std::vector<Char>>(il))
+        m_string(std::make_shared<CharVector>(il))
     {
     }
 
@@ -91,16 +213,26 @@ public:
     {
     }
 
-    void operator+=(const String& other) const
+    void operator+=(const String& other)
     {
+        m_string->cut();
+        if (m_string->m_frozen) {
+            m_string = std::make_shared<CharVector>(*m_string.get());
+        }
         m_string->insert(m_string->end(),
                          other.m_string->begin(),
                          other.m_string->end());
+        m_string->freeze();
     }
 
-    void operator+=(const Char& other) const
+    void operator+=(const Char& other)
     {
+        m_string->cut();
+        if (m_string->m_frozen) {
+            m_string = std::make_shared<CharVector>(*m_string.get());
+        }
         m_string->push_back(other);
+        m_string->freeze();
     }
 
     String operator+(const String& other);
@@ -203,3 +335,5 @@ static inline String operator+(const String& string_1, const String& string_2)
 }
 
 const String& string_not_none(const String& obj);
+
+String& string_not_none(String& obj);
