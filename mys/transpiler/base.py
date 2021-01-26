@@ -59,6 +59,8 @@ FOR_LOOP_FUNCS = set(['enumerate', 'range', 'reversed', 'slice', 'zip'])
 def mys_type_to_target_cpp_type(mys_type):
     if is_primitive_type(mys_type):
         return 'auto'
+    elif mys_type == 'string':
+        return 'auto'
     else:
         return 'const auto&'
 

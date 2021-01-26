@@ -265,6 +265,10 @@ def test_string_multiply():
     assert "a" * 3 == "aaa"
     assert 3 * "b" == "bbb"
 
+    a = "ab"
+    a *= 3
+    assert a == "ababab"
+
 @test
 def test_string_is():
     assert "a".is_alpha()
@@ -334,16 +338,12 @@ def test_string_find():
     assert x.find_reverse("t") == 10
 
 @test
-def test_string_cut():
+def test_string_partition():
     x = "find t or tea"
-    assert x.cut('t') == "find "
-    assert x == " or tea"
-    assert x.cut('t') == " or "
-    assert x == "ea"
+    assert x.partition('t') == ("find ", "t", " or tea")
+    assert x.partition('q') is None
 
-    x = "find t or t"
-    assert x.cut('q') is None
-    assert x == "find t or t"
+    assert x.partition("or") == ("find t ", "or", " tea")
 
 @test
 def test_string_strip():

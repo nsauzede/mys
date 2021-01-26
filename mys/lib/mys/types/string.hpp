@@ -7,6 +7,8 @@
 #include "bytes.hpp"
 
 template <typename T> class List;
+template<class... T> class Tuple;
+template <class ...T> using SharedTuple = std::shared_ptr<Tuple<T...>>;
 
 class Regex;
 class RegexMatch;
@@ -238,6 +240,7 @@ public:
     String operator+(const String& other);
 
     String operator*(int value) const;
+    void operator*=(int value);
 
     bool operator==(const String& other) const
     {
@@ -279,7 +282,8 @@ public:
     i64 find(const Char& sub, std::optional<i64> start, std::optional<i64> end) const;
     i64 find_reverse(const String& sub, std::optional<i64> start, std::optional<i64> end) const;
     i64 find_reverse(const Char& sub, std::optional<i64> start, std::optional<i64> end) const;
-    String cut(const Char& chr) const;
+    SharedTuple<String, String, String> partition(const Char& chr) const;
+    SharedTuple<String, String, String> partition(const String& chr) const;
     String replace(const Char& old, const Char& _new) const;
     String replace(const String& old, const String& _new) const;
     String replace(const Regex& regex, const String& replacement, int flags = 0) const;

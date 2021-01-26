@@ -124,7 +124,7 @@ STRING_METHODS = {
     'strip_right': [['string'], 'string'],
     'find': [['string|char', 'optional<i64>', 'optional<i64>'], 'i64'],
     'find_reverse': [['string|char', 'optional<i64>', 'optional<i64>'], 'i64'],
-    'cut': [['string'], 'string'],
+    'partition': [['string'], ('string', 'string', 'string')],
     'replace': [[None, None], 'string'],
     'is_alpha': [[], 'bool'],
     'is_digit': [[], 'bool'],

@@ -351,6 +351,19 @@ String String::operator+(const String& other)
     return res;
 }
 
+void String::operator*=(int value)
+{
+    String copy("");
+    copy.m_string->insert(copy.m_string->end(), m_string->begin(), m_string->end());
+
+    m_string = std::make_shared<CharVector>();
+    m_string->thaw();
+    for (int i = 0; i < value; i++) {
+        *this += copy;
+    }
+    m_string->freeze();
+}
+
 String String::operator*(int value) const
 {
     String res("");
@@ -818,19 +831,37 @@ String String::strip_right(std::optional<const String> chars) const
     return strip_left_right(chars, false, true);
 }
 
-String String::cut(const Char& chr) const
+SharedTuple<String, String, String> String::partition(const Char& chr) const
 {
     auto i = std::find(m_string->begin(), m_string->end(), chr);
     if (i == m_string->end()) {
         return nullptr;
     }
 
-    String res = String("");
-    res.m_string->resize(i - m_string->begin());
-    std::copy(m_string->begin(), i, res.m_string->begin());
+    String a("");
+    a.m_string->insert(a.m_string->end(), m_string->begin(), i);
+    String b("");
+    b.m_string->push_back(chr);
+    String c("");
+    c.m_string->insert(c.m_string->end(), i + 1, m_string->end());
 
-    m_string->m_begin += 1 + i - m_string->begin();
-    return res;
+    return std::make_shared<Tuple<String, String, String>>(a, b, c);
+}
+
+SharedTuple<String, String, String> String::partition(const String& str) const
+{
+    auto i = std::search(m_string->begin(), m_string->end(),
+                         str.m_string->begin(), str.m_string->end());
+    if (i == m_string->end()) {
+        return nullptr;
+    }
+
+    String a("");
+    a.m_string->insert(a.m_string->end(), m_string->begin(), i);
+    String b("");
+    b.m_string->insert(b.m_string->end(), i + str.__len__(), m_string->end());
+
+    return std::make_shared<Tuple<String, String, String>>(a, str, b);
 }
 
 String String::replace(const Char& old, const Char& _new) const
